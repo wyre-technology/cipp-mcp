@@ -6,14 +6,11 @@ import { createServer, IncomingMessage, ServerResponse, Server as HttpServer } f
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
-  ListResourcesRequestSchema,
   ListToolsRequestSchema,
   McpError,
-  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { CippService } from '../services/cipp.service.js';
 import { Logger } from '../utils/logger.js';
@@ -134,16 +131,6 @@ Tool categories:
       }
     });
 
-    server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      return { resources: [] };
-    });
-
-    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      throw new McpError(
-        ErrorCode.InvalidRequest,
-        `Resource not found: ${request.params.uri}`
-      );
-    });
   }
 
   /**
@@ -262,12 +249,6 @@ Tool categories:
           }
         });
 
-        server.setRequestHandler(ListResourcesRequestSchema, async () => ({ resources: [] }));
-
-        server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-          throw new McpError(ErrorCode.InvalidRequest, `Resource not found: ${request.params.uri}`);
-        });
-
         toolHandler.setServer(server);
 
         const transport = new StreamableHTTPServerTransport({
@@ -281,7 +262,8 @@ Tool categories:
         });
 
         server
-          .connect(transport as unknown as Transport)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .connect(transport as any)
           .then(() => {
             transport.handleRequest(req, res);
           })

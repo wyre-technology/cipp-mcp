@@ -39,30 +39,13 @@ interface CippServiceConfig {
  * ```
  */
 export class CippService {
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
+  private readonly baseUrl: string | undefined;
+  private readonly apiKey: string | undefined;
   private readonly logger: Logger;
 
   constructor(config: CippServiceConfig, logger: Logger) {
     const { baseUrl, apiKey } = config.cipp;
-
-    if (!baseUrl) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        'CIPP configuration error: baseUrl is required but was not provided. ' +
-          'Set the CIPP_BASE_URL environment variable or supply it via MCP client arguments.'
-      );
-    }
-
-    if (!apiKey) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        'CIPP configuration error: apiKey is required but was not provided. ' +
-          'Set the CIPP_API_KEY environment variable or supply it via MCP client arguments.'
-      );
-    }
-
-    this.baseUrl = baseUrl.replace(/\/$/, ''); // strip trailing slash
+    this.baseUrl = baseUrl ? baseUrl.replace(/\/$/, '') : undefined;
     this.apiKey = apiKey;
     this.logger = logger;
   }
@@ -90,6 +73,13 @@ export class CippService {
     params?: Record<string, unknown>,
     body?: Record<string, unknown>
   ): Promise<T> {
+    if (!this.baseUrl) {
+      throw new McpError(ErrorCode.InvalidParams, 'CIPP_BASE_URL is not configured. Set it in your environment or MCP client config.');
+    }
+    if (!this.apiKey) {
+      throw new McpError(ErrorCode.InvalidParams, 'CIPP_API_KEY is not configured. Set it in your environment or MCP client config.');
+    }
+
     const url = new URL(`${this.baseUrl}/api/${path}`);
 
     if (method === 'GET' && params) {
