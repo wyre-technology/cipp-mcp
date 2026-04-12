@@ -1,0 +1,55 @@
+{
+  "manifest_version": "0.3",
+  "name": "cipp-mcp",
+  "version": "0.1.0",
+  "display_name": "CIPP MCP Server",
+  "description": "MCP server for CIPP — M365 multi-tenant management, users, security, conditional access, and standards for MSPs",
+  "long_description": "Provides AI assistants with structured access to CIPP (CyberDrain Improved Partner Portal). Manage Microsoft 365 tenants, users, groups, security policies, conditional access, email configurations, and compliance standards across your entire MSP client base through the Model Context Protocol.",
+  "author": {
+    "name": "Aaron Sachs",
+    "url": "https://github.com/asachs01"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wyre-technology/cipp-mcp"
+  },
+  "homepage": "https://github.com/wyre-technology/cipp-mcp",
+  "license": "Apache-2.0",
+  "keywords": ["cipp", "m365", "microsoft365", "msp", "multi-tenant", "azure"],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/entry.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/entry.js"],
+      "env": {
+        "CIPP_BASE_URL": "${user_config.cipp_base_url}",
+        "CIPP_API_KEY": "${user_config.cipp_api_key}",
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  },
+  "tools_generated": true,
+  "user_config": {
+    "cipp_base_url": {
+      "type": "string",
+      "title": "CIPP Base URL",
+      "description": "The base URL of your CIPP deployment (e.g. https://cipp.yourdomain.com)",
+      "required": true
+    },
+    "cipp_api_key": {
+      "type": "string",
+      "title": "CIPP API Key",
+      "description": "API key generated from CIPP Settings → API Client Management",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    },
+    "claude_desktop": ">=0.10.0"
+  }
+}

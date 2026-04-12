@@ -1,0 +1,61 @@
+{
+  "name": "cipp-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for CIPP (CyberDrain Improved Partner Portal) — M365 multi-tenant management, users, security, and standards for MSPs",
+  "main": "dist/entry.js",
+  "bin": {
+    "cipp-mcp": "./dist/entry.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "prebuild": "npm run clean",
+    "pretest": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cipp",
+    "microsoft365",
+    "m365",
+    "msp",
+    "azure",
+    "multi-tenant",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "Aaron Sachs",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "semantic-release": "^25.0.0",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "@semantic-release/github": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
