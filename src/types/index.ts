@@ -20,8 +20,22 @@ export interface McpServerConfig {
   cipp: {
     /** Base URL of the CIPP Azure Function App (e.g. https://cipp.contoso.com). */
     baseUrl?: string;
-    /** Bearer token / API key used to authenticate against CIPP. */
+    /**
+     * Static Bearer token used to authenticate against CIPP. Mutually exclusive
+     * with the OAuth client-credentials fields below — if both are provided,
+     * the static `apiKey` wins.
+     */
     apiKey?: string;
+    /** Entra tenant (directory) ID that owns the CIPP API-client app registration. */
+    tenantId?: string;
+    /** Application (client) ID of the CIPP API client used for OAuth exchange. */
+    clientId?: string;
+    /** Application secret value issued for the CIPP API client. */
+    clientSecret?: string;
+    /** Optional OAuth scope override. Defaults to `<clientId>/.default`. */
+    tokenScope?: string;
+    /** Optional full token endpoint URL override (sovereign clouds / custom STS). */
+    tokenUrl?: string;
   };
 }
 

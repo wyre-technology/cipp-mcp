@@ -5,6 +5,7 @@
 
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../utils/logger.js';
+import { TokenProvider } from './token.service.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,6 +19,11 @@ interface CippServiceConfig {
   cipp: {
     baseUrl?: string;
     apiKey?: string;
+    tenantId?: string;
+    clientId?: string;
+    clientSecret?: string;
+    tokenScope?: string;
+    tokenUrl?: string;
   };
 }
 
@@ -41,13 +47,30 @@ interface CippServiceConfig {
 export class CippService {
   private readonly baseUrl: string | undefined;
   private readonly apiKey: string | undefined;
+  private readonly tokenProvider: TokenProvider | undefined;
   private readonly logger: Logger;
 
   constructor(config: CippServiceConfig, logger: Logger) {
-    const { baseUrl, apiKey } = config.cipp;
+    const { baseUrl, apiKey, tenantId, clientId, clientSecret, tokenScope, tokenUrl } = config.cipp;
     this.baseUrl = baseUrl ? baseUrl.replace(/\/$/, '') : undefined;
     this.apiKey = apiKey;
     this.logger = logger;
+
+    // If a static apiKey was supplied, prefer it (backwards-compatible behaviour).
+    // Otherwise, if OAuth client-credentials fields are present, build a token
+    // provider that will mint CIPP access tokens on demand.
+    if (!apiKey && tenantId && clientId && clientSecret) {
+      this.tokenProvider = new TokenProvider(
+        {
+          tenantId,
+          clientId,
+          clientSecret,
+          ...(tokenScope !== undefined ? { scope: tokenScope } : {}),
+          ...(tokenUrl !== undefined ? { tokenUrl } : {}),
+        },
+        logger
+      );
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -76,9 +99,14 @@ export class CippService {
     if (!this.baseUrl) {
       throw new McpError(ErrorCode.InvalidParams, 'CIPP_BASE_URL is not configured. Set it in your environment or MCP client config.');
     }
-    if (!this.apiKey) {
-      throw new McpError(ErrorCode.InvalidParams, 'CIPP_API_KEY is not configured. Set it in your environment or MCP client config.');
+    if (!this.apiKey && !this.tokenProvider) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'CIPP authentication is not configured. Set CIPP_API_KEY, or set CIPP_TENANT_ID + CIPP_CLIENT_ID + CIPP_CLIENT_SECRET for OAuth client-credentials auth.'
+      );
     }
+
+    const bearer = this.apiKey ?? (await this.tokenProvider!.getAccessToken());
 
     const url = new URL(`${this.baseUrl}/api/${path}`);
 
@@ -91,7 +119,7 @@ export class CippService {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${bearer}`,
       'Content-Type': 'application/json',
     };
 

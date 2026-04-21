@@ -18,8 +18,18 @@ export interface EnvironmentConfig {
   cipp: {
     /** Base URL of the CIPP Azure Function App. */
     baseUrl?: string;
-    /** Bearer token used to authenticate requests to CIPP. */
+    /** Static Bearer token used to authenticate requests to CIPP. */
     apiKey?: string;
+    /** Entra tenant ID for OAuth client-credentials flow. */
+    tenantId?: string;
+    /** App registration client ID for OAuth client-credentials flow. */
+    clientId?: string;
+    /** App registration client secret for OAuth client-credentials flow. */
+    clientSecret?: string;
+    /** Optional OAuth scope override. */
+    tokenScope?: string;
+    /** Optional token endpoint URL override. */
+    tokenUrl?: string;
   };
   /** Identity information surfaced to connected MCP clients. */
   server: {
@@ -55,6 +65,16 @@ export interface GatewayCredentials {
   baseUrl: string | undefined;
   /** CIPP API key / Bearer token. Maps from the `X_API_KEY` env var or `x-api-key` header. */
   apiKey: string | undefined;
+  /** Entra tenant ID. Maps from `X_TENANT_ID` / `x-tenant-id`. */
+  tenantId: string | undefined;
+  /** OAuth client ID. Maps from `X_CLIENT_ID` / `x-client-id`. */
+  clientId: string | undefined;
+  /** OAuth client secret. Maps from `X_CLIENT_SECRET` / `x-client-secret`. */
+  clientSecret: string | undefined;
+  /** Optional OAuth scope override. Maps from `X_TOKEN_SCOPE` / `x-token-scope`. */
+  tokenScope: string | undefined;
+  /** Optional token endpoint URL override. Maps from `X_TOKEN_URL` / `x-token-url`. */
+  tokenUrl: string | undefined;
 }
 
 /**
@@ -68,6 +88,11 @@ export function getCredentialsFromGateway(): GatewayCredentials {
   return {
     apiKey: process.env.X_API_KEY || process.env.CIPP_API_KEY,
     baseUrl: process.env.X_BASE_URL || process.env.CIPP_BASE_URL,
+    tenantId: process.env.X_TENANT_ID || process.env.CIPP_TENANT_ID,
+    clientId: process.env.X_CLIENT_ID || process.env.CIPP_CLIENT_ID,
+    clientSecret: process.env.X_CLIENT_SECRET || process.env.CIPP_CLIENT_SECRET,
+    tokenScope: process.env.X_TOKEN_SCOPE || process.env.CIPP_TOKEN_SCOPE,
+    tokenUrl: process.env.X_TOKEN_URL || process.env.CIPP_TOKEN_URL,
   };
 }
 
@@ -91,6 +116,11 @@ export function parseCredentialsFromHeaders(
   return {
     apiKey: getHeader('x-api-key'),
     baseUrl: getHeader('x-base-url'),
+    tenantId: getHeader('x-tenant-id'),
+    clientId: getHeader('x-client-id'),
+    clientSecret: getHeader('x-client-secret'),
+    tokenScope: getHeader('x-token-scope'),
+    tokenUrl: getHeader('x-token-url'),
   };
 }
 
@@ -101,7 +131,12 @@ export function parseCredentialsFromHeaders(
  * | Variable            | Description                                         | Default          |
  * |---------------------|-----------------------------------------------------|------------------|
  * | `CIPP_BASE_URL`     | Base URL of the CIPP Azure Function App             | –                |
- * | `CIPP_API_KEY`      | Bearer token for CIPP API authentication            | –                |
+ * | `CIPP_API_KEY`      | Static Bearer token for CIPP API (alt: OAuth below) | –                |
+ * | `CIPP_TENANT_ID`    | Entra tenant ID (OAuth client-credentials flow)     | –                |
+ * | `CIPP_CLIENT_ID`    | OAuth client ID of the CIPP API-client app reg      | –                |
+ * | `CIPP_CLIENT_SECRET`| OAuth client secret                                 | –                |
+ * | `CIPP_TOKEN_SCOPE`  | Override OAuth scope                                | `<clientId>/.default` |
+ * | `CIPP_TOKEN_URL`    | Override OAuth token endpoint URL                   | Entra v2.0       |
  * | `AUTH_MODE`         | `env` (default) or `gateway`                        | `env`            |
  * | `MCP_TRANSPORT`     | `stdio` (default) or `http`                         | `stdio`          |
  * | `MCP_HTTP_PORT`     | TCP port for the HTTP transport                     | `8080`           |
@@ -119,18 +154,28 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
   // In gateway mode the X_* env vars (injected by the gateway) take precedence.
   // In env mode we read the CIPP_* vars directly. getCredentialsFromGateway()
   // falls back to CIPP_* vars internally, so it is safe to call in both modes.
-  const creds = authMode === 'gateway'
+  const creds: GatewayCredentials = authMode === 'gateway'
     ? getCredentialsFromGateway()
     : {
         apiKey: process.env.CIPP_API_KEY,
         baseUrl: process.env.CIPP_BASE_URL,
+        tenantId: process.env.CIPP_TENANT_ID,
+        clientId: process.env.CIPP_CLIENT_ID,
+        clientSecret: process.env.CIPP_CLIENT_SECRET,
+        tokenScope: process.env.CIPP_TOKEN_SCOPE,
+        tokenUrl: process.env.CIPP_TOKEN_URL,
       };
 
   // Build the cipp sub-object, omitting undefined values so that
   // exactOptionalPropertyTypes is satisfied in strict tsconfig setups.
-  const cippConfig: { baseUrl?: string; apiKey?: string } = {};
+  const cippConfig: EnvironmentConfig['cipp'] = {};
   if (creds.baseUrl) cippConfig.baseUrl = creds.baseUrl;
   if (creds.apiKey) cippConfig.apiKey = creds.apiKey;
+  if (creds.tenantId) cippConfig.tenantId = creds.tenantId;
+  if (creds.clientId) cippConfig.clientId = creds.clientId;
+  if (creds.clientSecret) cippConfig.clientSecret = creds.clientSecret;
+  if (creds.tokenScope) cippConfig.tokenScope = creds.tokenScope;
+  if (creds.tokenUrl) cippConfig.tokenUrl = creds.tokenUrl;
 
   const transportType = (process.env.MCP_TRANSPORT as TransportType) || 'stdio';
   if (transportType !== 'stdio' && transportType !== 'http') {
@@ -181,6 +226,11 @@ export function mergeWithMcpConfig(
     cipp: {
       baseUrl: mcpArgs?.cipp?.baseUrl || envConfig.cipp.baseUrl,
       apiKey: mcpArgs?.cipp?.apiKey || envConfig.cipp.apiKey,
+      tenantId: mcpArgs?.cipp?.tenantId || envConfig.cipp.tenantId,
+      clientId: mcpArgs?.cipp?.clientId || envConfig.cipp.clientId,
+      clientSecret: mcpArgs?.cipp?.clientSecret || envConfig.cipp.clientSecret,
+      tokenScope: mcpArgs?.cipp?.tokenScope || envConfig.cipp.tokenScope,
+      tokenUrl: mcpArgs?.cipp?.tokenUrl || envConfig.cipp.tokenUrl,
     },
   };
 }

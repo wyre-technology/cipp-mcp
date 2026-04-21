@@ -5,13 +5,42 @@ startCommand:
     type: object
     required:
       - cippBaseUrl
-      - cippApiKey
     properties:
       cippBaseUrl:
         type: string
         description: The base URL of your CIPP deployment (e.g. https://cipp.yourdomain.com)
       cippApiKey:
         type: string
-        description: API key generated from CIPP Settings → API Client Management
+        description: |
+          Static Bearer token (legacy). Leave empty when using the OAuth
+          client-credentials fields below.
+      cippTenantId:
+        type: string
+        description: Entra tenant (directory) ID for OAuth client-credentials flow.
+      cippClientId:
+        type: string
+        description: OAuth client ID issued by CIPP → Settings → Integrations → CIPP-API.
+      cippClientSecret:
+        type: string
+        description: OAuth client secret paired with cippClientId.
+      cippTokenScope:
+        type: string
+        description: Override OAuth scope (default <clientId>/.default).
+      cippTokenUrl:
+        type: string
+        description: Override token endpoint URL (sovereign clouds only).
   commandFunction: |-
-    (config) => ({ command: 'node', args: ['dist/entry.js'], env: { CIPP_BASE_URL: config.cippBaseUrl, CIPP_API_KEY: config.cippApiKey, MCP_TRANSPORT: 'stdio' } })
+    (config) => ({
+      command: 'node',
+      args: ['dist/entry.js'],
+      env: Object.fromEntries(Object.entries({
+        CIPP_BASE_URL: config.cippBaseUrl,
+        CIPP_API_KEY: config.cippApiKey,
+        CIPP_TENANT_ID: config.cippTenantId,
+        CIPP_CLIENT_ID: config.cippClientId,
+        CIPP_CLIENT_SECRET: config.cippClientSecret,
+        CIPP_TOKEN_SCOPE: config.cippTokenScope,
+        CIPP_TOKEN_URL: config.cippTokenUrl,
+        MCP_TRANSPORT: 'stdio',
+      }).filter(([, v]) => v !== undefined && v !== ''))
+    })

@@ -188,17 +188,23 @@ Tool categories:
             req.headers as Record<string, string | string[] | undefined>
           );
 
-          if (!credentials.baseUrl || !credentials.apiKey) {
+          const hasOAuth =
+            !!credentials.tenantId && !!credentials.clientId && !!credentials.clientSecret;
+          const hasStatic = !!credentials.apiKey;
+
+          if (!credentials.baseUrl || (!hasStatic && !hasOAuth)) {
             this.logger.warn('Gateway mode: Missing required credentials in request headers', {
               hasBaseUrl: !!credentials.baseUrl,
-              hasApiKey: !!credentials.apiKey,
+              hasApiKey: hasStatic,
+              hasOAuthCreds: hasOAuth,
             });
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(
               JSON.stringify({
                 error: 'Missing credentials',
-                message: 'Gateway mode requires x-base-url and x-api-key headers',
-                required: ['x-base-url', 'x-api-key'],
+                message:
+                  'Gateway mode requires x-base-url plus either x-api-key or (x-tenant-id + x-client-id + x-client-secret)',
+                required: ['x-base-url', 'x-api-key OR (x-tenant-id + x-client-id + x-client-secret)'],
               })
             );
             return;
@@ -209,7 +215,12 @@ Tool categories:
             version: this.config.version,
             cipp: {
               baseUrl: credentials.baseUrl,
-              apiKey: credentials.apiKey,
+              ...(credentials.apiKey !== undefined ? { apiKey: credentials.apiKey } : {}),
+              ...(credentials.tenantId !== undefined ? { tenantId: credentials.tenantId } : {}),
+              ...(credentials.clientId !== undefined ? { clientId: credentials.clientId } : {}),
+              ...(credentials.clientSecret !== undefined ? { clientSecret: credentials.clientSecret } : {}),
+              ...(credentials.tokenScope !== undefined ? { tokenScope: credentials.tokenScope } : {}),
+              ...(credentials.tokenUrl !== undefined ? { tokenUrl: credentials.tokenUrl } : {}),
             },
           };
 
