@@ -13,8 +13,12 @@ async function main() {
     logger = new Logger(envConfig.logging.level, envConfig.logging.format);
     logger.info('Starting CIPP MCP Server...');
 
-    if (!mcpConfig.cipp.baseUrl || !mcpConfig.cipp.apiKey) {
-      logger.warn('Missing CIPP credentials. Tools will return errors until CIPP_BASE_URL and CIPP_API_KEY are configured.');
+    const hasOAuth = !!(mcpConfig.cipp.tenantId && mcpConfig.cipp.clientId && mcpConfig.cipp.clientSecret);
+    const hasStatic = !!mcpConfig.cipp.apiKey;
+    if (!mcpConfig.cipp.baseUrl || (!hasStatic && !hasOAuth)) {
+      logger.warn(
+        'Missing CIPP credentials. Tools will return errors until CIPP_BASE_URL plus either CIPP_API_KEY or (CIPP_TENANT_ID + CIPP_CLIENT_ID + CIPP_CLIENT_SECRET) are configured.'
+      );
     }
 
     const server = new CippMcpServer(mcpConfig, logger, envConfig);

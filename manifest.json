@@ -25,6 +25,9 @@
       "env": {
         "CIPP_BASE_URL": "${user_config.cipp_base_url}",
         "CIPP_API_KEY": "${user_config.cipp_api_key}",
+        "CIPP_TENANT_ID": "${user_config.cipp_tenant_id}",
+        "CIPP_CLIENT_ID": "${user_config.cipp_client_id}",
+        "CIPP_CLIENT_SECRET": "${user_config.cipp_client_secret}",
         "MCP_TRANSPORT": "stdio"
       }
     }
@@ -39,9 +42,28 @@
     },
     "cipp_api_key": {
       "type": "string",
-      "title": "CIPP API Key",
-      "description": "API key generated from CIPP Settings → API Client Management",
-      "required": true,
+      "title": "CIPP API Key (static Bearer token — legacy)",
+      "description": "Only required if using a static Bearer token. Leave blank to use OAuth client-credentials via the fields below.",
+      "required": false,
+      "sensitive": true
+    },
+    "cipp_tenant_id": {
+      "type": "string",
+      "title": "Entra Tenant ID",
+      "description": "Entra tenant (directory) ID that owns the CIPP API-client app registration. Required for OAuth client-credentials auth.",
+      "required": false
+    },
+    "cipp_client_id": {
+      "type": "string",
+      "title": "CIPP API Client ID",
+      "description": "OAuth client ID from CIPP → Settings → Integrations → CIPP-API.",
+      "required": false
+    },
+    "cipp_client_secret": {
+      "type": "string",
+      "title": "CIPP API Client Secret",
+      "description": "OAuth client secret paired with the Client ID.",
+      "required": false,
       "sensitive": true
     }
   },

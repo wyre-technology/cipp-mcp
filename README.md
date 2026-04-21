@@ -44,7 +44,12 @@ Set these environment variables (or copy `.env.example` to `.env`):
 | Variable | Required | Description |
 |---|---|---|
 | `CIPP_BASE_URL` | Yes | Your CIPP deployment URL (e.g. `https://cipp.yourdomain.com`) |
-| `CIPP_API_KEY` | Yes | API key from CIPP Settings → API Client Management |
+| `CIPP_API_KEY` | One of | Static Bearer token. Use this **or** the OAuth trio below. |
+| `CIPP_TENANT_ID` | One of | Entra tenant ID that owns the CIPP API-client app registration. |
+| `CIPP_CLIENT_ID` | One of | OAuth client ID issued by CIPP's API Client Management page. |
+| `CIPP_CLIENT_SECRET` | One of | OAuth client secret paired with `CIPP_CLIENT_ID`. |
+| `CIPP_TOKEN_SCOPE` | No | Override OAuth scope (default: `<clientId>/.default`). |
+| `CIPP_TOKEN_URL` | No | Override OAuth token endpoint (sovereign clouds only). |
 | `MCP_TRANSPORT` | No | `stdio` (default) or `http` |
 | `MCP_HTTP_PORT` | No | Port for HTTP mode (default: 8080) |
 | `LOG_LEVEL` | No | `error`, `warn`, `info` (default), or `debug` |
@@ -86,10 +91,27 @@ Add to your `claude_desktop_config.json`:
 
 ## Authentication Setup
 
-1. In CIPP, go to **Settings → CIPP Settings → API Client Management**
+CIPP's API Client Management page provisions an Entra ID app registration and
+returns an OAuth **client ID + client secret** (not a long-lived Bearer token).
+The server exchanges these for a short-lived access token on each request using
+the OAuth 2.0 client-credentials flow, and caches the token until just before
+its expiry.
+
+1. In CIPP, go to **Settings → CIPP Settings → Integrations → CIPP-API**
 2. Create a new API client
-3. Copy the generated API key
-4. Set `CIPP_API_KEY` to this value
+3. Copy the **Client ID** and **Client Secret** — you will not be able to
+   retrieve the secret later
+4. Configure the server:
+   ```env
+   CIPP_BASE_URL=https://cipp.yourdomain.com
+   CIPP_TENANT_ID=<your-entra-tenant-id>
+   CIPP_CLIENT_ID=<client-id-from-cipp>
+   CIPP_CLIENT_SECRET=<client-secret-from-cipp>
+   ```
+
+If you already have a static Bearer token (older CIPP deployments), set
+`CIPP_API_KEY` instead and leave the OAuth variables unset. When both are
+provided, `CIPP_API_KEY` wins.
 
 ## License
 

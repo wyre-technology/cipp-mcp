@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- OAuth 2.0 client-credentials auth against Entra ID. CIPP's "API Clients"
+  integration page issues a client ID + secret — the server now exchanges
+  those for a short-lived access token per request and caches it until expiry.
+  Configure via `CIPP_TENANT_ID`, `CIPP_CLIENT_ID`, `CIPP_CLIENT_SECRET`
+  (optional: `CIPP_TOKEN_SCOPE`, `CIPP_TOKEN_URL`).
+- Gateway-mode headers for OAuth: `x-tenant-id`, `x-client-id`,
+  `x-client-secret`, `x-token-scope`, `x-token-url`.
+
+### Changed
+- `CIPP_API_KEY` remains supported as a static Bearer token for backwards
+  compatibility. When both static and OAuth credentials are provided, the
+  static `apiKey` wins.
+- Gateway-mode `/mcp` now accepts either `x-api-key` OR the OAuth header
+  triple `(x-tenant-id + x-client-id + x-client-secret)`.
+
 ## [0.2.0] - 2026-04-21
 
 ### Added
