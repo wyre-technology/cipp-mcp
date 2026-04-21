@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-21
+
+### Added
+- Dockerfile (multi-stage node:22-alpine) for GHCR container image publishing
+- docker-compose.yml with production and dev (profile-gated) services
+- .dockerignore to keep image lean
+- .releaserc.json for semantic-release automated versioning and GitHub releases
+- GitHub Actions release workflow: test matrix (Node 18/20/22), semantic-release,
+  Docker build+push to GHCR, Trivy security scan, Azure Container Apps deployment
+- GitHub Actions add-to-project workflow for project board automation
+- smithery.yaml for Smithery marketplace stdio configuration
+
 ## [0.1.0] - 2026-04-12
 
 ### Added
