@@ -1,0 +1,83 @@
+services:
+  cipp-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: cipp-mcp:latest
+    container_name: cipp-mcp-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CIPP_BASE_URL=${CIPP_BASE_URL}
+      - CIPP_API_KEY=${CIPP_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_PORT=8080
+      - MCP_HTTP_HOST=0.0.0.0
+      - AUTH_MODE=${AUTH_MODE:-env}
+      - NODE_ENV=production
+    volumes:
+      - cipp-mcp-logs:/app/logs
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+
+  cipp-mcp-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    image: cipp-mcp:dev
+    container_name: cipp-mcp-dev
+    working_dir: /app
+    restart: "no"
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - LOG_FORMAT=${LOG_FORMAT:-simple}
+      - CIPP_BASE_URL=${CIPP_BASE_URL}
+      - CIPP_API_KEY=${CIPP_API_KEY}
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_PORT=8080
+      - MCP_HTTP_HOST=0.0.0.0
+      - AUTH_MODE=${AUTH_MODE:-env}
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - cipp-mcp-dev-logs:/app/logs
+    stdin_open: true
+    tty: true
+
+volumes:
+  cipp-mcp-logs:
+    driver: local
+  cipp-mcp-dev-logs:
+    driver: local
+
+# Example .env file structure (create this file with your actual credentials):
+# CIPP_BASE_URL=https://cipp.yourdomain.com
+# CIPP_API_KEY=your-api-key-here
+# LOG_LEVEL=info
+# LOG_FORMAT=json

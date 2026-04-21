@@ -1,0 +1,17 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - cippBaseUrl
+      - cippApiKey
+    properties:
+      cippBaseUrl:
+        type: string
+        description: The base URL of your CIPP deployment (e.g. https://cipp.yourdomain.com)
+      cippApiKey:
+        type: string
+        description: API key generated from CIPP Settings → API Client Management
+  commandFunction: |-
+    (config) => ({ command: 'node', args: ['dist/entry.js'], env: { CIPP_BASE_URL: config.cippBaseUrl, CIPP_API_KEY: config.cippApiKey, MCP_TRANSPORT: 'stdio' } })

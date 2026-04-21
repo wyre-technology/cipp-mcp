@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+dist
+.env
+*.env.local
+*.log
+coverage
+.DS_Store
+docker-compose*.yml
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+tests
+*.test.ts
+*.spec.ts
