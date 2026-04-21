@@ -168,8 +168,11 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="ghcr.io/${{ github.repository }}:latest"
+          echo "Deploying $IMAGE to mcpgw-prod-cipp (revision tag sha-${SHORT_SHA}-${GITHUB_RUN_ID})"
           az containerapp update \
-            --name gwp-cipp \
+            --name mcpgw-prod-cipp \
             --resource-group mcp-gateway-prod \
-            --image ghcr.io/${{ github.repository }}:sha-$(echo ${{ github.sha }} | cut -c1-7) \
-            --set-env-vars "IMAGE_VERSION=sha-$(echo ${{ github.sha }} | cut -c1-7) RUN_ID=${{ github.run_id }}"
+            --image "$IMAGE" \
+            --set-env-vars "IMAGE_VERSION=sha-${SHORT_SHA}-${GITHUB_RUN_ID}"
