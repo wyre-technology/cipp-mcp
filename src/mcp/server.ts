@@ -8,9 +8,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   CallToolRequestSchema,
-  ErrorCode,
   ListToolsRequestSchema,
-  McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { CippService } from '../services/cipp.service.js';
 import { Logger } from '../utils/logger.js';
@@ -121,13 +119,11 @@ Tool categories:
         };
       } catch (error) {
         this.logger.error(`Failed to call tool ${request.params.name}:`, error);
-        if (error instanceof McpError) {
-          throw error;
-        }
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Failed to call tool: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return {
+          content: [{ type: 'text', text: message }],
+          isError: true,
+        };
       }
     });
 
@@ -252,11 +248,12 @@ Tool categories:
             );
             return { content: result.content, isError: result.isError };
           } catch (error) {
-            if (error instanceof McpError) throw error;
-            throw new McpError(
-              ErrorCode.InternalError,
-              `Failed to call tool: ${error instanceof Error ? error.message : 'Unknown error'}`
-            );
+            this.logger.error(`Failed to call tool ${request.params.name}:`, error);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            return {
+              content: [{ type: 'text', text: message }],
+              isError: true,
+            };
           }
         });
 
