@@ -1,0 +1,69 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.wyre-technology/cipp-mcp",
+  "title": "CIPP",
+  "description": "MCP server for CIPP — M365 multi-tenant management for MSPs (users, tenants, policies).",
+  "repository": {
+    "url": "https://github.com/wyre-technology/cipp-mcp",
+    "source": "github"
+  },
+  "version": "0.0.0",
+  "websiteUrl": "https://github.com/wyre-technology/cipp-mcp",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/wyre-technology/cipp-mcp:0.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CIPP_API_URL",
+          "description": "Base URL of your CIPP API instance (e.g. https://cipp-api.example.com)",
+          "isRequired": true,
+          "format": "string"
+        },
+        {
+          "name": "CIPP_CLIENT_ID",
+          "description": "Entra ID application (client) ID used to authenticate to CIPP",
+          "isRequired": true,
+          "format": "string"
+        },
+        {
+          "name": "CIPP_CLIENT_SECRET",
+          "description": "Entra ID client secret for the CIPP application",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "CIPP_TENANT_ID",
+          "description": "Entra ID tenant ID hosting the CIPP application registration",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "MCP_TRANSPORT",
+          "description": "Transport mode for the server. Set to 'stdio' for local CLI use; the image defaults to 'http' for gateway hosting.",
+          "isRequired": false,
+          "default": "stdio",
+          "format": "string"
+        },
+        {
+          "name": "AUTH_MODE",
+          "description": "Credential source: 'env' reads vars locally, 'gateway' expects header injection from the WYRE MCP Gateway.",
+          "isRequired": false,
+          "default": "env",
+          "format": "string"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "description": "Log verbosity: debug, info, warn, error",
+          "isRequired": false,
+          "default": "info",
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
